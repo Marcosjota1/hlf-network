@@ -1,0 +1,70 @@
+Fase 1: Prerrequisitos (¡Muy Importante!)
+El código usa Hyperledger Fabric v2.1 (una versión antigua). Para que funcione sin errores, necesitas un entorno compatible:
+
+Sistema Operativo: Linux (Ubuntu 20.04 o 22.04) o WSL2 en Windows.
+
+Docker y Docker Compose: Necesarios para los contenedores.
+
+Node.js: Versión 12 o 14 (Recomendado v14 LTS). No uses Node v18 o superior o tendrás problemas con el SDK antiguo de Fabric.
+
+CURL y GIT.
+
+Fase 2: Descarga y Configuración de Binarios
+El repositorio no incluye los binarios de Fabric (peer, orderer, etc.), hay que bajarlos.
+
+Clona el repo (si no lo has hecho):
+
+Bash
+
+git clone https://github.com/Marcosjota1/hlf-network.git
+cd hlf-network
+Instalar Binarios de Fabric: En la raíz hay un script llamado loadFabric.sh. Ejecútalo. Esto descargará la versión exacta (2.1.0) que necesita este proyecto para que coincida con los scripts.
+
+Bash
+
+chmod +x loadFabric.sh
+./loadFabric.sh
+Al finalizar, deberías ver una carpeta bin y config en tu directorio actual.
+
+Fase 3: Despliegue de la Red 
+
+cd pharma-ledger-network
+
+Dar permisos de ejecución: Asegúrate de que los scripts tengan permiso.
+chmod +x net-pln.sh
+chmod +x scripts/*.sh
+
+Levantar la red (Nodos y Certificados): Ejecuta el modo up. Esto genera los certificados con cryptogen y levanta los contenedores Docker.
+./net-pln.sh up
+Verificación: Ejecuta docker ps. Deberías ver contenedores para peer0.org1, peer0.org2, peer0.org3 y orderer.
+
+Crear el Canal (Channel): Ahora creamos el canal de comunicación plnchannel y unimos a los peers.
+./net-pln.sh createChannel
+Lo que hace por dentro: Crea la transacción del canal, une a las 3 organizaciones y actualiza los "Anchor Peers" para que se puedan "ver" entre ellas.
+Desplegar el Smart Contract (Chaincode): Este paso empaqueta, instala y "aprueba" el contrato inteligente (escrito en Node.js) en las 3 organizaciones.
+
+./net-pln.sh deploySmartContract
+Nota: Este proceso puede tardar unos minutos. Si ves mensajes de "Chaincode definition approved", va bien.
+
+
+Fase 4: Levantar la Aplicación Web (El Frontend)
+Arrancar las Apps: Necesitarás 3 terminales diferentes (o usar segundo plano).
+
+Terminal 1 (Fabricante):
+
+cd organizations/manufacturer/application
+npm install
+node app.js
+Abre en navegador: http://localhost:30000
+
+Terminal 2 (Mayorista):
+cd organizations/wholesaler/application
+npm install
+node app.js
+Abre en navegador: http://localhost:30001
+
+Terminal 3 (Farmacia):
+cd organizations/pharmacy/application
+npm install
+node app.js
+Abre en navegador: http://localhost:30002
